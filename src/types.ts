@@ -5,3 +5,10 @@ export interface PendoReportData {
   visitorId: string;
   account_auto_id: string;
 }
+
+export interface AccountFactSheet {
+  id: string;
+  displayName: string;
+  category: 'workspace' | 'company';
+  lxMTMWorkspaceId: { externalId: string };
+}

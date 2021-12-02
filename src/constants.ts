@@ -12,3 +12,23 @@ export const WRITE_USAGE_MUTATION = `
         }
     }
 `;
+
+export const GET_ALL_ACCOUNT_FACT_SHEETS = `
+query{
+    allFactSheets(filter: {facetFilters: [{facetKey: "FactSheetTypes", keys: ["Account"]}]}) {
+      totalCount
+      edges {
+        node {
+          id
+          displayName
+          category
+          ... on Account {
+            lxMTMWorkspaceId {
+                externalId
+              }
+          } 
+        }
+      }
+    }
+  }
+`;

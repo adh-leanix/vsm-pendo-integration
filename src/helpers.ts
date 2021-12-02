@@ -1,5 +1,7 @@
 import axios from 'axios';
 import _ from 'lodash';
+import { GET_ALL_ACCOUNT_FACT_SHEETS } from './constants';
+import { AccountFactSheet } from './types';
 
 export async function getPendoReport<T>(apiToken: string, id: string) {
   const pendoAPIUrl = `https://app.pendo.io/api/v1/report/${id}/results.json`;
@@ -32,7 +34,7 @@ export async function getLxAccessToken(instance: string, apiToken: string): Prom
   return accessToken;
 }
 
-export async function lxGqlRequest(instance: string, accessToken: string, query: string, variables: Record<string, unknown>) {
+export async function lxGqlWriteFsRequest(instance: string, accessToken: string, query: string, variables: Record<string, unknown>) {
   const lxPfUrl = `https://${instance}/services/pathfinder/v1/graphql`;
   const lxGqlResponse = await axios.post(lxPfUrl, JSON.stringify({ query, variables }), {
     headers: {
@@ -47,4 +49,22 @@ export async function lxGqlRequest(instance: string, accessToken: string, query:
   }
 
   return _.get(lxGqlResponse, 'data.data.result.factSheet');
+}
+
+export async function getAllAccountFactSheets(instance: string, accessToken: string): Promise<AccountFactSheet[]> {
+  const lxPfUrl = `https://${instance}/services/pathfinder/v1/graphql`;
+  const lxGqlResponse = await axios.post(lxPfUrl, JSON.stringify({ query: GET_ALL_ACCOUNT_FACT_SHEETS, variables: {} }), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!_.isNull(_.get(lxGqlResponse, 'data.errors'))) {
+    const errors: Array<{ message: string; location: unknown }> = _.get(lxGqlResponse, 'data.errors');
+    throw new Error(errors.map(({ message }) => message).join('|'));
+  }
+
+  const edges: Array<{ node: Record<string, unknown> }> = _.get(lxGqlResponse, 'data.data.allFactSheets.edges');
+  return edges.map(({ node }) => node) as unknown as AccountFactSheet[];
 }
