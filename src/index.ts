@@ -61,22 +61,29 @@ dotenv.config();
       };
     });
 
-    for (const fs of Object.values(updatesAccountValues)) {
-      // Write Data to lx Workspace
-      const data = await lxGqlWriteFsRequest(lxInstance, lxAccessToken, WRITE_USAGE_MUTATION, {
-        id: _.get(fs, 'id'),
+    const fsPatches = Object.values(updatesAccountValues).map((value) => {
+      return {
+        id: value.accountFsId,
         patches: [
           {
             op: 'replace',
             path: '/lxNumberOfVisitorsLast30Day',
-            value: String(_.get(fs, 'lxNumberOfVisitorsLast30Day'))
+            value: _.get(value, 'lxNumberOfVisitorsLast30Day')
           },
           {
             op: 'replace',
             path: '/lxLastVisitDate',
-            value: _.get(fs, 'lxLastVisitDate')
+            value: _.get(value, 'lxLastVisitDate')
           }
         ]
+      };
+    });
+
+    for (const patches of fsPatches) {
+      // Write Data to lx Workspace
+      const data = await lxGqlWriteFsRequest(lxInstance, lxAccessToken, WRITE_USAGE_MUTATION, {
+        id: _.get(patches, 'id'),
+        patches: _.get(patches, 'patches')
       });
 
       console.log(data);
